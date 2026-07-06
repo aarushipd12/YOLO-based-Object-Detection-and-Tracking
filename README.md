@@ -3,6 +3,8 @@
 A deep learning pipeline for detecting, tracking, and alerting on objects in aerial drone footage — built on YOLOv8 / YOLOv8-World and trained on the VisDrone dataset. Supports fixed-class detection, open-vocabulary text-prompt detection, low-light inference, and a restricted-zone alert system.
 
 **🔗 Live demo:** [dashboarddronefootageobjectdetection.streamlit.app](https://dashboarddronefootageobjectdetection.streamlit.app/)
+
+
 **🔗 Dashboard/deployment repo:** [drone-detection-dashboard](https://github.com/aarushipd12/DASHBOARD---Drone-Footage-Object-Detection-and-Tracking) 
 
 ---
