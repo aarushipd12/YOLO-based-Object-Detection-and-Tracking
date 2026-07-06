@@ -1,0 +1,11 @@
+ultralytics
+opencv-python
+torch
+torchvision
+numpy
+matplotlib
+pandas
+sahi
+supervision
+gdown
+deep-sort-realtime
