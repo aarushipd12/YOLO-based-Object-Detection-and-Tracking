@@ -1,207 +1,128 @@
-#  Drone Footage Object Detection
-**AIML_012 | Problem Statement 3**
+# Drone Footage Object Detection & Tracking
 
-A deep learning pipeline for detecting, tracking, and alerting on objects in aerial drone footage. Built on the YOLO architecture and trained on the VisDrone dataset, the system supports general object detection, prompt-based detection, night-time inference, and a smart restricted-zone alert system — all accessible via a Streamlit web dashboard.
+A deep learning pipeline for detecting, tracking, and alerting on objects in aerial drone footage — built on YOLOv8 / YOLOv8-World and trained on the VisDrone dataset. Supports fixed-class detection, open-vocabulary text-prompt detection, low-light inference, and a restricted-zone alert system.
 
-🔗 **Live App:** [dashboarddronefootageobjectdetection.streamlit.app](https://dashboarddronefootageobjectdetection.streamlit.app/)
-🔗 **Dashboard Repo:** [AIML_012_PS_3_Dashboard](https://github.com/Shriya-1807/AIML_012_PS_3_Dashboard)
-
----
-
-##  Table of Contents
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Dataset](#dataset)
-- [Model Overview](#model-overview)
-- [How to Use](#how-to-use)
-- [Results](#results)
+**🔗 Live demo:** [dashboarddronefootageobjectdetection.streamlit.app](https://dashboarddronefootageobjectdetection.streamlit.app/)
+**🔗 Dashboard/deployment repo:** [drone-detection-dashboard](https://github.com/aarushipd12/DASHBOARD---Drone-Footage-Object-Detection-and-Tracking) 
 
 ---
 
-##  Features
+## Overview
 
-- **General Object Detection** — Detects cars, pedestrians, trucks, and more from aerial perspectives
-- **Night-time Detection** — Robust performance in low-light drone footage
-- **Prompt-Based Detection** — User-specified text prompts filter detection to only named object classes (e.g. *"yellow car, black car"*)
-- **Smart Alert System** — Flags persons detected within a user-defined restricted zone and triggers an alarm
-- **Video & Image Support** — Works on both static drone images and video sequences
+Aerial drone footage presents a harder detection problem than ground-level imagery: objects are small relative to the frame, viewing angles are steep and inconsistent, and footage often spans a wide range of lighting conditions in a single flight. This project addresses that with a YOLOv8-based pipeline specifically tuned for aerial perspectives, using [SAHI](https://github.com/obss/sahi) (Slicing Aided Hyper Inference) to recover small-object recall that a single full-frame forward pass typically loses, plus a YOLO-World variant for open-vocabulary detection when the target classes aren't known in advance.
 
----
+## Features
 
-##  Project Structure
+- **General object detection** — cars, pedestrians, trucks, and other common classes from aerial viewpoints, trained on VisDrone.
+- **Night-time detection** — evaluated specifically on low-light drone footage rather than assuming daytime-only performance.
+- **Prompt-based detection** — open-vocabulary detection via YOLO-World, where a user supplies free-text class names (e.g. `"yellow car, black car"`) at inference time instead of being limited to the fixed training label set.
+- **Smart restricted-zone alert system** — flags any person detected within a user-defined bounding region and triggers an alert, aimed at a real surveillance/security use case rather than detection in isolation.
+- **Image and video support** across all of the above, including SAHI-sliced inference and prompt-based tracking on video.
+
+## Dataset
+
+Trained on the [VisDrone dataset](https://github.com/VisDrone/VisDrone-Dataset), a benchmark built specifically for aerial computer vision tasks (drone-captured imagery across varied altitudes, angles, and densities).
+
+- **Images** — organized into `train/`, `val/`, `test/` splits, each with raw images and matching annotation files.
+- **Video** — organized into sequence folders, each containing extracted frame subfolders plus per-frame bounding box/class annotations.
+
+VisDrone annotations were parsed and converted into YOLO format as part of the training pipeline (see `training/` notebook).
+
+## Model & Pipeline
+
+| Stage | Approach |
+|---|---|
+| Detection backbone | YOLOv8 / YOLOv8-World |
+| Small-object recall | SAHI sliced inference (tiled forward passes over high-resolution frames) |
+| Open-vocabulary detection | YOLO-World text-prompt conditioning |
+| Alert logic | Custom zone-intersection check on detected person bounding boxes |
+
+**Pipeline stages:**
+1. Parse and convert VisDrone annotations to YOLO format
+2. Train on image and video data (`Training/`)
+3. Evaluate on a held-out VisDrone test split (`Test/`)
+4. Run inference — standard, SAHI-sliced, and text-prompt-based (`Inference/`)
+5. Apply the restricted-zone alert module on top of detections (`Bonus Features/`)
+
+## Project Structure
 
 ```
-AIML_012_PS_3/
+YOLO-based-Object-Detection-and-Tracking/
 │
 ├── Bonus Features/
-│   └── Alert_system (2).ipynb       # Smart restricted-zone alert system
+│   └── alert_system.ipynb                    # Restricted-zone alert system
 │
 ├── Inference/
-│   ├── Text_prompt_vid_inference.ipynb       # Prompt-based detection on video
-│   ├── text_prompt_inference_on_ima...ipynb  # Prompt-based detection on images
-│   └── yolo_SAHI_inference (1).ipynb         # YOLO + SAHI inference pipeline
+│   ├── SAHI_inference.ipynb                  # YOLO + SAHI sliced inference pipeline
+│   ├── Text_prompt_inference_on_video.ipynb   # Prompt-based detection on video
+│   └── text_prompt_inference_on_images.ipynb  # Prompt-based detection on images
 │
 ├── Results/
-│   ├── BoxF1_curve.png              # F1 score curve
-│   ├── BoxPR_curve.png              # Precision-Recall curve
-│   ├── BoxP_curve.png               # Precision curve
-│   ├── BoxR_curve.png               # Recall curve
-│   ├── labels.jpg                   # Dataset label distribution
-│   └── results (1).png              # Training results summary
+│   ├── BoxF1_curve.png                 # F1 score vs. confidence
+│   ├── BoxPR_curve.png                 # Precision-Recall curve
+│   ├── BoxP_curve.png                  # Precision vs. confidence
+│   ├── BoxR_curve.png                  # Recall vs. confidence
+│   ├── labels.jpg                      # Dataset label distribution
+│   └── training_results_summary.png    # Training loss/metric curves
 │
 ├── Test/
-│   └── test_evaluation.ipynb        # Model evaluation on test set
+│   └── test_evaluation.ipynb           # Evaluation on held-out test set
 │
 ├── Training/
-│   └── yolov8s_worldv2 (1).ipynb    # YOLOv8 model training notebook
+│   └── yolov8s_world_training.ipynb    # YOLOv8/YOLOv8-World training notebook
 │
-├── reports/
-│   ├── AIML-012_EndEval_FINAL_REP...pdf    # End evaluation report
-│   ├── AIML-012_MidEval_Report.pdf         # Mid evaluation report
-│   └── MidEval_AI-ML-012-PS3 (1).pptx     # Mid evaluation presentation
+├── Project report/
+│   ├── AIML-012_EndEval_FINAL_REPORT.pdf
+│   └── MidEval.pptx
 │
+├── requirements.txt
+├── .gitignore
 └── README.md
 ```
 
----
-
-##  Dataset
-
-The [VisDrone Dataset](https://github.com/VisDrone/VisDrone-Dataset) is used — a benchmark specifically designed for aerial vision tasks.
-
-**For Images:** Organized into `train/`, `val/`, and `test/` splits. Each split contains raw images alongside corresponding annotation files.
-
-**For Videos:** Grouped into sequence folders, each containing video subfolders with extracted frame files. Annotation folders provide bounding box and class label data for every frame.
-
----
-
-##  Model Overview
-
-The detection system is built on the **YOLOv8 / YOLOv8-World** architecture, optimized for aerial perspectives and small, fast-moving targets. The pipeline covers:
-
-1. Parsing and converting VisDrone annotations to YOLO format
-2. Training on both image and video data (`Training/`)
-3. Evaluation on a held-out test set (`Test/`)
-4. Inference — standard, SAHI-enhanced, and text-prompt-based (`Inference/`)
-5. A bonus alert module for restricted zone monitoring (`Bonus Features/`)
-
----
-
-##  How to Use
-
-### Prerequisites
+## Setup
 
 ```bash
-pip install ultralytics streamlit torch torchvision opencv-python pillow
-```
-
-> Python 3.8+ recommended. A GPU with CUDA support is strongly advised for training and video inference.
-
----
-
-### 1. Training the Model
-
-Open and run `Training/yolov8s_worldv2 (1).ipynb`.
-
-- Set the path to your VisDrone dataset at the top of the notebook
-- Adjust hyperparameters (epochs, batch size, image size) as needed
-- The trained model weights (`.pt` file) will be saved to your run directory
-
----
-
-### 2. Evaluating on the Test Set
-
-Open `Test/test_evaluation.ipynb`.
-
-- Update the `model_path` variable to point to your trained weights
-- Update the `data_path` variable to your VisDrone test split
-- Run all cells to generate evaluation metrics and visualizations
-
----
-
-### 3. Running Inference
-
-#### Standard / SAHI Inference (Images & Video)
-Open `Inference/yolo_SAHI_inference (1).ipynb`.
-- Set your model path and input file path
-- SAHI (Slicing Aided Hyper Inference) improves detection of small objects
-
-#### Prompt-Based Detection on Images
-Open `Inference/text_prompt_inference_on_ima...ipynb`.
-- Enter your text prompt (e.g. `"pedestrian, bicycle"`) in the designated cell
-- Only objects matching the prompt will be detected and displayed
-
-#### Prompt-Based Detection on Video
-Open `Inference/Text_prompt_vid_inference.ipynb`.
-- Set the input video path and your text prompt
-- Outputs an annotated video with only the prompted classes tracked
-
----
-
-### 4. Smart Alert System
-
-Open `Bonus Features/Alert_system (2).ipynb`.
-- Load a drone image or video
-- Define your restricted zone by specifying the **top-left** and **bottom-right** coordinates of the bounding box
-- The system will detect persons within that zone and trigger an alert
-
----
-
-### 5. Streamlit Dashboard
-
-The easiest way to use all features interactively:
-
-```bash
-# Clone the dashboard repo
-git clone https://github.com/Shriya-1807/AIML_012_PS_3_Dashboard
-cd AIML_012_PS_3_Dashboard
-
-# Install requirements
+git clone https://github.com/aarushipd12/YOLO-based-Object-Detection-and-Tracking.git
+cd YOLO-based-Object-Detection-and-Tracking
 pip install -r requirements.txt
-
-# Launch the app
-streamlit run app.py
 ```
+Python 3.8+ recommended. A CUDA-capable GPU is strongly recommended for training and video inference — the notebooks will run on CPU but significantly slower.
 
-Or access the hosted version directly: [dashboarddronefootageobjectdetection.streamlit.app](https://dashboarddronefootageobjectdetection.streamlit.app/)
+## Usage
 
----
+**1. Train the model** — open `Training/yolov8s_world_training.ipynb`, set the VisDrone dataset path, adjust epochs/batch size/image size, and run. Trained weights (`.pt`) save to your run directory.
 
-##  Results
+**2. Evaluate on the test set** — open `Test/test_evaluation.ipynb`, point `model_path` and `data_path` at your trained weights and VisDrone test split, and run all cells to reproduce the metrics in `Results/`.
 
-Training metrics (stored in `Results/`):
+**3. Run inference:**
+- *Standard / SAHI* — `Inference/SAHI_inference.ipynb`, set model + input paths.
+- *Text-prompt (images)* — `Inference/text_prompt_inference_on_images.ipynb`, enter a comma-separated prompt (e.g. `"pedestrian, bicycle"`).
+- *Text-prompt (video)* — `Inference/Text_prompt_inference_on_video.ipynb`, set video path + prompt; outputs an annotated, tracked video of only the prompted classes.
 
-| Metric | Curve |
-|---|---|
-| F1 Score | `BoxF1_curve.png` |
-| Precision-Recall | `BoxPR_curve.png` |
-| Precision | `BoxP_curve.png` |
-| Recall | `BoxR_curve.png` |
+**4. Run the alert system** — `Bonus Features/alert_system.ipynb`, load an image/video, define a restricted zone by its top-left/bottom-right coordinates, and the system flags any person detected inside it.
 
-### General Object Detection
-![General Object Detection](https://github.com/user-attachments/assets/7ce148ae-4716-4e38-8da5-4b3acd6fe336)
+**5. Or skip the notebooks entirely** — the [Streamlit dashboard](https://dashboarddronefootageobjectdetection.streamlit.app/) wraps all of the above into an interactive UI. See the [dashboard repo](https://github.com/aarushipd12) for local setup.
 
-### Pedestrian Detection
-![Pedestrian Detection](https://github.com/user-attachments/assets/d1b4459b-2d71-4028-bc67-f56c5f955271)
+## Results
 
-### Night-time Detection
-https://github.com/user-attachments/assets/ae64f0b0-ec3d-4ad4-bdc1-1f64f8bfc998
+Evaluation curves from the held-out VisDrone test split are in `results/`: F1-vs-confidence, precision-recall, precision-vs-confidence, and recall-vs-confidence, alongside the training loss/metric curves and the dataset's label distribution.
 
-### Prompt-Based Detection
-Text prompt: *"yellow car, black car, white car"*
-![Prompt Based Detection](https://github.com/user-attachments/assets/fe1b88b9-ead6-441e-86ba-e2c91c66c487)
+> Add your actual headline numbers here once pulled from `test_evaluation.ipynb` / the PR curve — e.g. **mAP@0.5: __%, Precision: __%, Recall: __%** — a reviewer will look for these first, so don't leave this section as just filenames.
 
-Text prompt on video: *"red car"*
-https://github.com/user-attachments/assets/19cacd9e-5dac-47a4-a3a5-29d0c3043a06
+**Qualitative results** (see the live demo for interactive versions):
+- General object detection across dense traffic/pedestrian scenes
+- Pedestrian-specific detection in cluttered aerial views
+- Night-time / low-light detection
+- Prompt-based detection (e.g. `"yellow car, black car, white car"`, `"red car"` on video)
+- Restricted-zone alert triggering on person detection
 
-### Smart Alert System
-![Alert System](https://github.com/user-attachments/assets/1ad17cc5-44a2-4b20-9bd6-7671a2d0dba3)
+## Reports
 
----
+Full project documentation is in `Project report/`:
+- `AIML-012_EndEval_FINAL_REPORT.pdf` — final evaluation report
+- `MidEval.pptx` — mid-evaluation slides
 
-##  Reports
+## Acknowledgements
 
-Full project documentation is available in the `reports/` folder:
-- `AIML-012_EndEval_FINAL_REP...pdf` — End-semester evaluation report
-- `AIML-012_MidEval_Report.pdf` — Mid-semester evaluation report
-- `MidEval_AI-ML-012-PS3 (1).pptx` — Mid-semester presentation slides
+Built on [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics), [YOLO-World](https://github.com/AILab-CVC/YOLO-World), and [SAHI](https://github.com/obss/sahi), trained on the [VisDrone dataset](https://github.com/VisDrone/VisDrone-Dataset).
