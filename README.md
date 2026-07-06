@@ -123,8 +123,7 @@ Evaluation curves from the held-out VisDrone test split are in `results/`: F1-vs
 
 Full project documentation is in `Project report/`:
 - `AIML-012_EndEval_FINAL_REPORT.pdf` — final evaluation report
-- `MidEval.pptx` — mid-evaluation slides
-
+- 
 ## Acknowledgements
 
 Built on [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics), [YOLO-World](https://github.com/AILab-CVC/YOLO-World), and [SAHI](https://github.com/obss/sahi), trained on the [VisDrone dataset](https://github.com/VisDrone/VisDrone-Dataset).
