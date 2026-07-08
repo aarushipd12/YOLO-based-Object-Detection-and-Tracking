@@ -110,7 +110,24 @@ Python 3.8+ recommended. A CUDA-capable GPU is strongly recommended for training
 
 Evaluation curves from the held-out VisDrone test split are in `results/`: F1-vs-confidence, precision-recall, precision-vs-confidence, and recall-vs-confidence, alongside the training loss/metric curves and the dataset's label distribution.
 
-> Add your actual headline numbers here once pulled from `test_evaluation.ipynb` / the PR curve — e.g. **mAP@0.5: __%, Precision: __%, Recall: __%** — a reviewer will look for these first, so don't leave this section as just filenames.
+### General Object Detection
+![General Object Detection](https://github.com/user-attachments/assets/7ce148ae-4716-4e38-8da5-4b3acd6fe336)
+
+### Pedestrian Detection
+![Pedestrian Detection](https://github.com/user-attachments/assets/d1b4459b-2d71-4028-bc67-f56c5f955271)
+
+### Night-time Detection
+https://github.com/user-attachments/assets/ae64f0b0-ec3d-4ad4-bdc1-1f64f8bfc998
+
+### Prompt-Based Detection
+Text prompt: *"yellow car, black car, white car"*
+![Prompt Based Detection](https://github.com/user-attachments/assets/fe1b88b9-ead6-441e-86ba-e2c91c66c487)
+
+Text prompt on video: *"red car"*
+https://github.com/user-attachments/assets/19cacd9e-5dac-47a4-a3a5-29d0c3043a06
+
+### Smart Alert System
+![Alert System](https://github.com/user-attachments/assets/1ad17cc5-44a2-4b20-9bd6-7671a2d0dba3)
 
 **Qualitative results** (see the live demo for interactive versions):
 - General object detection across dense traffic/pedestrian scenes
